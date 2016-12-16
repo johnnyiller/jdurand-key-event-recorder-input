@@ -1,0 +1,157 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+`jdurand-key-event-recorder-input`
+creates a form input that records keystrokes
+
+@demo demo/index.html
+-->
+
+  <script>
+    Polymer({
+
+      is: 'jdurand-key-event-recorder-input',
+      extends: 'input',
+      properties: {
+        _keyevents: {
+          type: Array,
+          value: []
+        },
+        eventJson: {
+          type: String,
+          value: "{}",
+          notify: true
+        },
+        bindValue: {
+          observer: '_bindValueChanged',
+          type: String
+        },
+        phrase: {
+            type: String,
+            value: ""
+        },
+        _previousValue: {
+          type: String,
+          value: ''
+        },
+        _charIndex: {
+          type: Number,
+          value: 0
+        },
+        currentCharacter: {
+          type: String,
+          readOnly: true,
+          computed: '_getCharacter(_charIndex)',
+          notify: true
+        },
+        _phraseTyped: {
+          type: String,
+          value: ''
+        },
+        totalTime: {
+          type: Number,
+          notify: true
+        }
+      },
+      listeners: {
+        'keyup': '_onKeyHandler',
+        'keypress': '_onKeyHandler'
+      },
+      reset: function(){
+        this._phraseTyped = "";
+        this._charIndex = 0;
+        this.value = this._phraseTyped;
+        //console.log(this._keyevents[this._keyevents.length-1]);
+        this.bindValue = this.value;
+        this._keyevents = [];
+        this.focus(); 
+      },
+      _onInput: function(){
+        //this.bindValue = this.value;
+      },
+      registered: function() {
+      // Feature detect whether we need to patch dispatchEvent (i.e. on FF and IE).
+        if (!this._canDispatchEventOnDisabled()) {
+          this._origDispatchEvent = this.dispatchEvent;
+          this.dispatchEvent = this._dispatchEventFirefoxIE;
+        }
+      },
+      _canDispatchEventOnDisabled: function() {
+        var input = document.createElement('input');
+        var canDispatch = false;
+        input.disabled = true;
+        input.addEventListener('feature-check-dispatch-event', function() {
+          canDispatch = true;
+        });
+        try {
+          input.dispatchEvent(new Event('feature-check-dispatch-event'));
+        } catch(e) {}
+        return canDispatch;
+      },
+      /**
+       * @this {Node}
+       * @param {!Event} event
+       * @return {boolean}
+       */
+      _dispatchEventFirefoxIE: function(event) {
+        // Due to Firefox bug, events fired on disabled form controls can throw
+        // errors; furthermore, neither IE nor Firefox will actually dispatch
+        // events from disabled form controls; as such, we toggle disable around
+        // the dispatch to allow notifying properties to notify
+        // See issue #47 for details
+        var disabled = this.disabled;
+        this.disabled = false;
+        var defaultPrevented = this._origDispatchEvent(event);
+        this.disabled = disabled;
+        return defaultPrevented
+      },
+      ready: function() {
+        this.bindValue = this.value;
+      },
+      /**
+       * @suppress {checkTypes}
+       */
+      _bindValueChanged: function() {
+        if (this.value !== this.bindValue) {
+          this.value = !(this.bindValue || this.bindValue === 0 || this.bindValue === false) ? '' : this.bindValue;
+        }
+        // manually notify because we don't want to notify until after setting value
+        this.fire('bind-value-changed', {value: this.bindValue});
+      },
+      _getCharacter: function(index){
+        //console.log(this.phrase.charAt(index));
+        return this.phrase.charAt(index);
+      },
+      _onKeyHandler: function(event){
+        // if we see a keyup then we are moving to
+        // the next letter in the phrase.
+        if(event.key === this.currentCharacter){
+          this._keyevents.push({
+            k: event.key,
+            t: event.type,
+            kc: event.keyCode,
+            ts: event.timeStamp,
+            ck: event.ctrlKey,
+            sk: event.shiftKey,
+            ak: event.altKey,
+            w: event.which
+          });
+
+          if(event.type == "keyup"){
+          //console.log("whate the fuck");
+            this._charIndex += 1;
+            this._phraseTyped += event.key;
+          }
+          this.eventJson = JSON.stringify(this._keyevents);
+          this.totalTime = this._keyevents[this._keyevents.length-1].ts - this._keyevents[0].ts;
+        }
+        if(this.value != this._phraseTyped){
+          this.value = this._phraseTyped;
+        }
+        //console.log(this._keyevents[this._keyevents.length-1]);
+
+        this.bindValue = this.value;
+      }
+
+    });
+  </script>

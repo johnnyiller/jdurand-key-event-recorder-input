@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>jdurand-key-event-recorder-input demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../jdurand-key-event-recorder-input.html">
+
+    <style is="custom-style" include="demo-pages-shared-styles">
+    </style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic jdurand-key-event-recorder-input demo</h3>
+      <demo-snippet>
+        <template is="dom-bind">
+          <p>please type the phrase:</p>
+          <p>you must type this</p>
+          <input
+              id="exampleinput"
+              is="jdurand-key-event-recorder-input"
+              event-json="{{myJson}}"
+              bind-value="{{myValue}}"
+              current-character="{{currentChar}}"
+              phrase="you must type this"
+              total-time="{{myTime}}">
+          <button onclick="document.querySelector('#exampleinput').reset();">Reset</button>
+          <p>{{myTime}}</p>
+          <p>{{currentChar}}</p>
+          <p>{{myJson}}</p>
+        </template>
+      </demo-snippet>
+    </div>
+  </body>
+</html>
